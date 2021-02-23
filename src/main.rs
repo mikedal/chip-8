@@ -54,6 +54,7 @@ impl Chip8 {
         (self.memory[self.pc] as u16).rotate_left(8) | self.memory[self.pc + 1] as u16
     }
 
+
     fn emulate_cycle(&mut self){
         let raw_opcode = self.fetch();
         self.opcode = decode(raw_opcode)
@@ -78,12 +79,13 @@ fn create_chip8() -> Chip8 {
     instance
 }
 
+#[allow(non_camel_case_types)]
 enum Opcode {
     OP_0000,
     OP_00E0,
     OP_00EE,
-    OP_1MMM (u32),
-    OP_2MMM (u32),
+    OP_1MMM (u16),
+    OP_2MMM (u16),
     OP_3XKK (u8, u16),
     OP_4XKK (u8, u16),
     OP_5XY0 (u8, u8),
@@ -96,8 +98,8 @@ enum Opcode {
     OP_8XY4 (u8, u8),
     OP_8XY5 (u8, u8),
     OP_9XY0 (u8, u8),
-    OP_AMMM (u32),
-    OP_BMMM (u32),
+    OP_AMMM (u16),
+    OP_BMMM (u16),
     OP_CXKK (u8, u16),
     OP_DXYN (u8, u8, u8),
     OP_EX9E (u8),
@@ -105,6 +107,7 @@ enum Opcode {
     OP_F000,
     OP_FX07 (u8),
     OP_FX0A (u8),
+    OP_FX15 (u8),
     OP_FX17 (u8),
     OP_FX18 (u8),
     OP_FX1E (u8),
@@ -119,8 +122,146 @@ enum Opcode {
 }
 
 fn decode(instruction: u16) -> Opcode {
-    // todo: fill this in
-    panic!()
+    match instruction & 0xF000 {
+        0x0000 => {
+            if instruction == 0x0000 {
+                Opcode::OP_0000
+            } else if instruction == 0x00E0 {
+                Opcode::OP_00E0
+            } else if instruction == 0x00EE {
+                Opcode::OP_00EE
+            } else {
+                panic!()
+            }
+        }
+        0x1000 => Opcode::OP_1MMM(instruction & 0x0FFF),
+        0x2000 => Opcode::OP_2MMM(instruction & 0x0FFF),
+        0x3000 => {
+            let (x, kk) = decode_xkk(instruction);
+            Opcode::OP_3XKK(x, kk)
+
+        }
+        0x4000 => {
+            let (x, kk) = decode_xkk(instruction);
+            Opcode::OP_4XKK(x, kk)
+
+        }
+        0x5000 => {
+            match instruction & 0x000F {
+                0x0000 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_5XY0(x,y)
+
+                }
+                _ => panic!("unknown opcode")
+            }
+        }
+        0x6000 => {
+            let (x, kk) = decode_xkk(instruction);
+            Opcode::OP_6XKK(x, kk)
+        }
+        0x7000 => {
+            let (x, kk) = decode_xkk(instruction);
+            Opcode::OP_7XKK(x, kk)
+        }
+        0x8000 => {
+            match instruction & 0x000F {
+                0x0000 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY0(x,y)
+                }
+                0x0001 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY1(x,y)
+                }
+                0x0002 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY2(x,y)
+                }
+                0x0003 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY3(x,y)
+                }
+                0x0004 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY4(x,y)
+                }
+                0x0005 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY5(x,y)
+                }
+                _ => panic!("unknown opcode")
+            }
+
+        }
+        0x9000 => {
+            match instruction & 0x000F {
+                0x0000 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_9XY0(x,y)
+                }
+                _ => panic!("unknown opcode")
+            }
+        }
+        0xA000 => Opcode::OP_AMMM(instruction & 0x0FFF),
+        0xB000 => Opcode::OP_BMMM(instruction & 0x0FFF),
+        0xC000 => {
+            let (x, kk) = decode_xkk(instruction);
+            Opcode::OP_CXKK(x, kk)
+        }
+        0xD000 => {
+            let (x, y) = decode_xy(instruction);
+            let n = (instruction & 0x000F) as u8;
+            Opcode::OP_DXYN(x, y, n)
+        }
+        0xE000 => {
+            match instruction & 0x00FF {
+                0x009E => Opcode::OP_EX9E(decode_x(instruction)),
+                0x00A1 => Opcode::OP_EXA1(decode_x(instruction)),
+                _ => panic!("unknown opcode")
+            }
+        }
+        0xF000 => {
+            if instruction == 0xF000 {
+                Opcode::OP_F000
+            } else {
+                match instruction & 0x00FF {
+                    0x0007 => Opcode::OP_FX07(decode_x(instruction)),
+                    0x000A => Opcode::OP_FX0A(decode_x(instruction)), 
+                    0x0015 => Opcode::OP_FX15(decode_x(instruction)), 
+                    0x0017 => Opcode::OP_FX17(decode_x(instruction)), 
+                    0x0018 => Opcode::OP_FX18(decode_x(instruction)), 
+                    0x001E => Opcode::OP_FX1E(decode_x(instruction)), 
+                    0x0029 => Opcode::OP_FX29(decode_x(instruction)), 
+                    0x0033 => Opcode::OP_FX33(decode_x(instruction)), 
+                    0x0055 => Opcode::OP_FX55(decode_x(instruction)), 
+                    0x0065 => Opcode::OP_FX65(decode_x(instruction)), 
+                    0x0070 => Opcode::OP_FX70(decode_x(instruction)), 
+                    0x0071 => Opcode::OP_FX71(decode_x(instruction)), 
+                    0x0072 => Opcode::OP_FX72(decode_x(instruction)), 
+                    _ => panic!("unknown opcode")
+                }
+            }
+        }
+        _ => panic!("unknown opcode")
+        
+    }
+}
+
+fn decode_xkk(instruction: u16) -> (u8, u16) {
+    let x = (instruction.rotate_right(12) & 0x000F) as u8;
+    let kk = instruction & 0x00FF as u16;
+    (x, kk)
+}
+
+fn decode_xy(instruction: u16) -> (u8, u8) {
+    let x = (instruction.rotate_right(12) & 0x000F) as u8;
+    let y = (instruction.rotate_right(4) & 0x000F) as u8;
+    (x, y)
+}
+
+fn decode_x(instruction: u16) -> u8 {
+    (instruction.rotate_right(12) & 0x000F) as u8
 }
 
 fn main() {
