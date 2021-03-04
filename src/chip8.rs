@@ -173,7 +173,22 @@ pub mod chip8{
                     self.pc += 2;
                 }
                 Opcode::OP_DXYN(x, y, n) => {
-                    //TODO: do something
+                    let mut collision = false;
+                    for byte_index in 0..n {
+                        let byte = self.memory[self.I + byte_index];
+                        for bit_index in 0..8 {
+                            let gfx_index = (y + byte_index) * DISPLAY_WIDTH + x + bit_index;
+                            let bit_value = byte.rotate_right(7 - bit_index) & 1;
+                            if (bit_value as bool) & self.gfx[gfx_index] {
+                                collision = true;
+                            }
+                            self.gfx[gfx_index] = bit_value ^ bit_value;
+                        }
+
+                    }
+                    self.V[0xF] = collision as u8;
+                    self.draw = true;
+                    self.pc += 2;
                 }
                 Opcode::OP_EX9E(x) => {
                     // skip if key[Vx] is down
