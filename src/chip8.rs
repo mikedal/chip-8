@@ -4,12 +4,13 @@ pub mod chip8{
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
-    const DISPLAY_HEIGHT: usize = 32;
-    const DISPLAY_WIDTH: usize = 64;
+    pub const DISPLAY_HEIGHT: usize = 32;
+    pub const DISPLAY_WIDTH: usize = 64;
     const STACK_SIZE: usize = 16;
     const KEY_COUNT: usize = 16;
     const FONT_SIZE: usize = 80;
 
+    #[allow(non_snake_case)]
     pub struct Chip8 {
         memory: [u8; MEM_SIZE],
         // general purpose registers
@@ -18,14 +19,14 @@ pub mod chip8{
         I: usize,
         pc: usize,
         // monochrome, so use bool
-        gfx: [bool; DISPLAY_HEIGHT * DISPLAY_WIDTH],
+        pub gfx: [bool; DISPLAY_HEIGHT * DISPLAY_WIDTH],
         delay_timer: u8,
         sound_timer: u8,
         stack: [usize; STACK_SIZE],
         sp: usize,
         keys: [bool; KEY_COUNT],
         opcode: Opcode,
-        // pitch:
+        pub draw: bool,
     }
 
     impl Chip8 {
@@ -245,6 +246,7 @@ pub mod chip8{
             sp: 0,
             keys: [false; KEY_COUNT],
             opcode: Opcode::OP_0000,
+            draw: false,
         };
         instance.init_font();
         instance
