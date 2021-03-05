@@ -1,6 +1,7 @@
 
 pub mod chip8{
     use rand::{thread_rng, Rng};
+    use std::backtrace::BacktraceStatus::Disabled;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -244,7 +245,10 @@ pub mod chip8{
         }
 
         fn clear_screen(&mut self) {
-            // TODO: do something
+            for i in 0..DISPLAY_HEIGHT * DISPLAY_WIDTH {
+                self.gfx[i] = false;
+            }
+            self.draw = true
         }
     }
 
