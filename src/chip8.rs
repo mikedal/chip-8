@@ -1,7 +1,6 @@
 
 pub mod chip8{
     use rand::{thread_rng, Rng};
-    use std::backtrace::BacktraceStatus::Disabled;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -175,15 +174,15 @@ pub mod chip8{
                 }
                 Opcode::OP_DXYN(x, y, n) => {
                     let mut collision = false;
-                    for byte_index in 0..n {
+                    for byte_index in 0..n as usize {
                         let byte = self.memory[self.I + byte_index];
                         for bit_index in 0..8 {
                             let gfx_index = (y + byte_index) * DISPLAY_WIDTH + x + bit_index;
-                            let bit_value = byte.rotate_right(7 - bit_index) & 1;
-                            if (bit_value as bool) & self.gfx[gfx_index] {
+                            let bit_value = (byte.rotate_right(7 - bit_index as u32) & 1) != 0;
+                            if bit_value & self.gfx[gfx_index] {
                                 collision = true;
                             }
-                            self.gfx[gfx_index] = bit_value ^ bit_value;
+                            self.gfx[gfx_index] = self.gfx[gfx_index] ^ bit_value;
                         }
 
                     }
@@ -229,7 +228,11 @@ pub mod chip8{
                 // }
                 Opcode::OP_FX18(x) => {}
                 Opcode::OP_FX1E(x) => {}
-                Opcode::OP_FX29(x) => {}
+                Opcode::OP_FX29(x) => {
+                    // set I to the memory address of the sprite for the hex digit in VX
+                    self.I = (self.V[x] * 5) as usize;
+                    self.pc += 2;
+                }
                 Opcode::OP_FX33(x) => {}
                 Opcode::OP_FX55(x) => {}
                 Opcode::OP_FX65(x) => {}
