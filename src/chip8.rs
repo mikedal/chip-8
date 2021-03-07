@@ -1,6 +1,9 @@
 
 pub mod chip8{
     use rand::{thread_rng, Rng};
+    use std::path::Path;
+    use std::fs::File;
+    use std::io::Read;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -9,6 +12,7 @@ pub mod chip8{
     const STACK_SIZE: usize = 16;
     const KEY_COUNT: usize = 16;
     const FONT_SIZE: usize = 80;
+    const PROGRAM_START_ADDRESS: usize = 0x0200;
 
     #[allow(non_snake_case)]
     pub struct Chip8 {
@@ -30,6 +34,15 @@ pub mod chip8{
     }
 
     impl Chip8 {
+        pub fn load_rom(&mut self, file_path: &Path){
+            let mut file  = File::open(file_path).unwrap();
+            let mut file_contents: Vec<u8> = Vec::new();
+            let read_size = file.read_to_end(&mut file_contents).unwrap();
+            for i in 0..read_size {
+                self.memory[PROGRAM_START_ADDRESS + i] = file_contents[i];
+            }
+        }
+
         fn init_font(&mut self) {
             // could we do this without allocating a new array? probably
             let font: [u8; FONT_SIZE] = [
@@ -260,7 +273,7 @@ pub mod chip8{
             memory: [0; MEM_SIZE],
             V: [0; REGISTER_COUNT],
             I: 0,
-            pc: 0x200,
+            pc: PROGRAM_START_ADDRESS,
             gfx: [false; DISPLAY_HEIGHT * DISPLAY_WIDTH],
             delay_timer: 0,
             sound_timer: 0,
