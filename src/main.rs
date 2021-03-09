@@ -8,9 +8,18 @@ use sdl2::pixels::Color;
 use std::time::Duration;
 
 use crate::chip8::chip8::create_chip8;
+use std::env;
+use std::path::Path;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    let filename = &args[1];
+    let filepath = Path::new(filename);
+    assert!(filepath.is_file());
+
     let mut chip8 = create_chip8();
+    chip8.load_rom(filepath);
+
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
     let window = video_subsystem

@@ -190,7 +190,7 @@ pub mod chip8{
                     for byte_index in 0..n as usize {
                         let byte = self.memory[self.I + byte_index];
                         for bit_index in 0..8 {
-                            let gfx_index = (y + byte_index) * DISPLAY_WIDTH + x + bit_index;
+                            let gfx_index = (self.V[y] as usize + byte_index) * DISPLAY_WIDTH + self.V[x] as usize + bit_index;
                             let bit_value = (byte.rotate_right(7 - bit_index as u32) & 1) != 0;
                             if bit_value & self.gfx[gfx_index] {
                                 collision = true;
@@ -257,7 +257,8 @@ pub mod chip8{
 
         pub fn emulate_cycle(&mut self) {
             let raw_opcode = self.fetch();
-            self.opcode = decode(raw_opcode)
+            self.opcode = decode(raw_opcode);
+            self.execute();
         }
 
         fn clear_screen(&mut self) {
@@ -442,18 +443,35 @@ pub mod chip8{
     }
 
     fn decode_xkk(instruction: u16) -> (usize, u8) {
-        let x = (instruction.rotate_right(12) & 0x000F) as usize;
+        let x = (instruction.rotate_right(8) & 0x000F) as usize;
         let kk = (instruction & 0x00FF) as u8;
         (x, kk)
     }
 
     fn decode_xy(instruction: u16) -> (usize, usize) {
-        let x = (instruction.rotate_right(12) & 0x000F) as usize;
+        let x = (instruction.rotate_right(8) & 0x000F) as usize;
         let y = (instruction.rotate_right(4) & 0x000F) as usize;
         (x, y)
     }
     fn decode_x(instruction: u16) -> usize {
-        (instruction.rotate_right(12) & 0x000F) as usize
+        (instruction.rotate_right(8) & 0x000F) as usize
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use crate::chip8;
+
+        #[test]
+        fn test_decode() {
+            let result = chip8::chip8::decode(0xA21A);
+            match result {
+                chip8::chip8::Opcode::OP_AMMM(mmm)  => {
+                    assert_eq!(mmm, 0x21A);
+            }
+               _ => assert!(false, "wrong opcode parsed")
+            }
+
+        }
     }
 
 }
