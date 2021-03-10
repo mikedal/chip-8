@@ -1,9 +1,8 @@
-
-pub mod chip8{
+pub mod chip8 {
     use rand::{thread_rng, Rng};
-    use std::path::Path;
     use std::fs::File;
     use std::io::Read;
+    use std::path::Path;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -34,8 +33,8 @@ pub mod chip8{
     }
 
     impl Chip8 {
-        pub fn load_rom(&mut self, file_path: &Path){
-            let mut file  = File::open(file_path).unwrap();
+        pub fn load_rom(&mut self, file_path: &Path) {
+            let mut file = File::open(file_path).unwrap();
             let mut file_contents: Vec<u8> = Vec::new();
             let read_size = file.read_to_end(&mut file_contents).unwrap();
             for i in 0..read_size {
@@ -190,7 +189,9 @@ pub mod chip8{
                     for byte_index in 0..n as usize {
                         let byte = self.memory[self.I + byte_index];
                         'inner: for bit_index in 0..8 {
-                            let gfx_index = (self.V[y] as usize + byte_index) * DISPLAY_WIDTH + self.V[x] as usize + bit_index;
+                            let gfx_index = (self.V[y] as usize + byte_index) * DISPLAY_WIDTH
+                                + self.V[x] as usize
+                                + bit_index;
                             if gfx_index >= DISPLAY_HEIGHT * DISPLAY_WIDTH {
                                 break 'inner;
                             }
@@ -200,7 +201,6 @@ pub mod chip8{
                             }
                             self.gfx[gfx_index] = self.gfx[gfx_index] ^ bit_value;
                         }
-
                     }
                     self.V[0xF] = collision as u8;
                     self.draw = true;
@@ -468,13 +468,11 @@ pub mod chip8{
         fn test_decode() {
             let result = chip8::chip8::decode(0xA21A);
             match result {
-                chip8::chip8::Opcode::OP_AMMM(mmm)  => {
+                chip8::chip8::Opcode::OP_AMMM(mmm) => {
                     assert_eq!(mmm, 0x21A);
+                }
+                _ => assert!(false, "wrong opcode parsed"),
             }
-               _ => assert!(false, "wrong opcode parsed")
-            }
-
         }
     }
-
 }
