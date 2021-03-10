@@ -189,8 +189,11 @@ pub mod chip8{
                     let mut collision = false;
                     for byte_index in 0..n as usize {
                         let byte = self.memory[self.I + byte_index];
-                        for bit_index in 0..8 {
+                        'inner: for bit_index in 0..8 {
                             let gfx_index = (self.V[y] as usize + byte_index) * DISPLAY_WIDTH + self.V[x] as usize + bit_index;
+                            if gfx_index >= DISPLAY_HEIGHT * DISPLAY_WIDTH {
+                                break 'inner;
+                            }
                             let bit_value = (byte.rotate_right(7 - bit_index as u32) & 1) != 0;
                             if bit_value & self.gfx[gfx_index] {
                                 collision = true;
