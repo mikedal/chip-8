@@ -52,7 +52,7 @@ fn main() {
             canvas.set_draw_color(Color::RGB(255, 255, 255));
             for i in 0..(chip8::chip8::DISPLAY_WIDTH * chip8::chip8::DISPLAY_HEIGHT){
                 if chip8.gfx[i]{
-                    canvas.draw_point(Point::new(i as i32 % chip8::chip8::DISPLAY_WIDTH as i32, i as i32 / chip8::chip8::DISPLAY_WIDTH as i32));
+                    canvas.draw_point(Point::new(i as i32 % chip8::chip8::DISPLAY_WIDTH as i32, i as i32 / chip8::chip8::DISPLAY_WIDTH as i32)).unwrap();
                 }
             }
             canvas.present();
