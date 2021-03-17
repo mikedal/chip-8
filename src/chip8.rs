@@ -3,6 +3,7 @@ pub mod chip8 {
     use std::fs::File;
     use std::io::Read;
     use std::path::Path;
+    use sdl2::keyboard::Keycode;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -30,6 +31,7 @@ pub mod chip8 {
         keys: [bool; KEY_COUNT],
         opcode: Opcode,
         pub draw: bool,
+        wait_for_input: Option<usize>,
     }
 
     impl Chip8 {
@@ -39,6 +41,56 @@ pub mod chip8 {
             let read_size = file.read_to_end(&mut file_contents).unwrap();
             for i in 0..read_size {
                 self.memory[PROGRAM_START_ADDRESS + i] = file_contents[i];
+            }
+        }
+
+
+        pub fn key_up(&mut self, keycode: Keycode){
+            let mapped_keycode = Chip8::keymap(keycode);
+            match mapped_keycode {
+                None => {}
+                Some(pressed_key) => {
+                    self.keys[pressed_key as usize] = false;
+                }
+            }
+        }
+        pub fn key_down(&mut self, keycode: Keycode){
+            let mapped_keycode = Chip8::keymap(keycode);
+            match mapped_keycode {
+                None => {} // pressed key is not in keymap. don't do anything
+                Some(pressed_key) => {
+                    match self.wait_for_input {
+                        Some(x) => {
+                            self.V[x] = pressed_key;
+                            self.wait_for_input = None;
+                        }
+                        None => {
+                            self.keys[pressed_key as usize] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        fn keymap(keycode: Keycode) -> Option<u8>{
+            match keycode {
+                Keycode::X => Some(0x0),
+                Keycode::Num1 => Some(0x1),
+                Keycode::Num2 => Some(0x2),
+                Keycode::Num3 => Some(0x3),
+                Keycode::Num4 => Some(0xC),
+                Keycode::Q => Some(0x4),
+                Keycode::W => Some(0x5),
+                Keycode::E => Some(0x6),
+                Keycode::R => Some(0xD),
+                Keycode::A => Some(0x7),
+                Keycode::S => Some(0x8),
+                Keycode::D => Some(0x9),
+                Keycode::F => Some(0xE),
+                Keycode::Z => Some(0xA),
+                Keycode::C => Some(0xB),
+                Keycode::V => Some(0xF),
+                _ => None
             }
         }
 
@@ -234,6 +286,7 @@ pub mod chip8 {
                 Opcode::OP_FX0A(x) => {
                     // TODO: implement
                     // wait for keypress and save value to Vx
+
                 }
                 Opcode::OP_FX15(x) => {
                     self.delay_timer = self.V[x];
@@ -286,6 +339,7 @@ pub mod chip8 {
             keys: [false; KEY_COUNT],
             opcode: Opcode::OP_0000,
             draw: false,
+            wait_for_input: None,
         };
         instance.init_font();
         instance

@@ -45,6 +45,16 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown{keycode, .. } => {
+                    if let Some(keycode) = keycode{
+                        chip8.key_down(keycode);
+                    }
+                }
+                Event::KeyUp{keycode, ..} => {
+                    if let Some(keycode) = keycode {
+                        chip8.key_up(keycode);
+                    }
+                }
                 _ => {}
             }
         }
