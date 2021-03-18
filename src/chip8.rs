@@ -4,6 +4,7 @@ pub mod chip8 {
     use std::io::Read;
     use std::path::Path;
     use sdl2::keyboard::Keycode;
+    use crate::chip8::chip8::Opcode::OP_1MMM;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -196,23 +197,21 @@ pub mod chip8 {
                     self.pc += 2;
                 }
                 Opcode::OP_8XY4(x, y) => {
-                    // this is assuming it overflows. need to test
-                    let result = self.V[x] + self.V[y];
-                    if result < self.V[x] {
-                        self.V[0xF] = 1;
-                    }
-                    self.V[x] = result;
-                    self.V[x] += self.V[y];
+                    let result = self.V[x].overflowing_add(self.V[y]);
+                    self.V[0xF] = result.1 as bool;
+                    self.V[x] = result.0;
                     self.pc += 2;
                 }
                 Opcode::OP_8XY5(x, y) => {
-                    // this is assuming it overflows. need to test
-                    let result = self.V[x] - self.V[y];
-                    if self.V[x] < self.V[y] {
-                        self.V[0xF] = 0;
-                    }
-                    self.V[x] = result;
-                    self.V[x] += self.V[y];
+                    let result = self.V[x].overflowing_sub(self.V[y]) ;
+                    self.V[0xF] = result.1 as bool;
+                    self.V[x] = result.0;
+                    self.pc += 2;
+                }
+                Opcode::OP_8XY7(x, y) => {
+                    let result =  self.V[y].overflowing_sub(self.V[x]);
+                    self.V[0xF] = result.1 as bool;
+                    self.V[x] = result.0;
                     self.pc += 2;
                 }
                 Opcode::OP_9XY0(x, y) => {
@@ -362,6 +361,7 @@ pub mod chip8 {
         OP_8XY3(usize, usize),
         OP_8XY4(usize, usize),
         OP_8XY5(usize, usize),
+        OP_8XY7(usize, usize),
         OP_9XY0(usize, usize),
         OP_AMMM(usize),
         OP_BMMM(usize),
@@ -448,6 +448,10 @@ pub mod chip8 {
                     let (x, y) = decode_xy(instruction);
                     Opcode::OP_8XY5(x, y)
                 }
+                0x0007 => {
+                    let (x, y) = decode_xy(instruction);
+                    Opcode::OP_8XY7(x, y)
+                }
                 _ => panic!("unknown opcode"),
             },
             0x9000 => match instruction & 0x000F {
@@ -524,6 +528,14 @@ pub mod chip8 {
             match result {
                 chip8::chip8::Opcode::OP_AMMM(mmm) => {
                     assert_eq!(mmm, 0x21A);
+                }
+                _ => assert!(false, "wrong opcode parsed"),
+            }
+            let result = chip8::chip8::decode(0x8F17);
+            match result {
+                chip8::chip8::Opcode::OP_8XY7(x, y) => {
+                    assert_eq!(x, 0xF);
+                    assert_eq!(y, 0x1);
                 }
                 _ => assert!(false, "wrong opcode parsed"),
             }
