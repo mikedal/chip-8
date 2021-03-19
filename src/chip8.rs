@@ -177,7 +177,9 @@ pub mod chip8 {
                     self.pc += 2;
                 }
                 Opcode::OP_7XKK(x, kk) => {
-                    self.V[x] += kk;
+                    let result = self.V[x].overflowing_add(kk);
+                    self.V[0xF] = result.1 as u8;
+                    self.V[x] = result.0;
                     self.pc += 2;
                 }
                 Opcode::OP_8XY0(x, y) => {
@@ -198,19 +200,19 @@ pub mod chip8 {
                 }
                 Opcode::OP_8XY4(x, y) => {
                     let result = self.V[x].overflowing_add(self.V[y]);
-                    self.V[0xF] = result.1 as bool;
+                    self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
                 Opcode::OP_8XY5(x, y) => {
                     let result = self.V[x].overflowing_sub(self.V[y]) ;
-                    self.V[0xF] = result.1 as bool;
+                    self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
                 Opcode::OP_8XY7(x, y) => {
                     let result =  self.V[y].overflowing_sub(self.V[x]);
-                    self.V[0xF] = result.1 as bool;
+                    self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
@@ -307,6 +309,9 @@ pub mod chip8 {
                 Opcode::OP_FX70(x) => {}
                 Opcode::OP_FX71(x) => {}
                 Opcode::OP_FX72(x) => {}
+            }
+            if self.delay_timer >0{
+                self.delay_timer -= 1;
             }
         }
 
