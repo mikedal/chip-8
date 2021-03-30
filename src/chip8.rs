@@ -297,7 +297,10 @@ pub mod chip8 {
                 //     self.pitch = self.V[x];
                 // }
                 Opcode::OP_FX18(x) => {}
-                Opcode::OP_FX1E(x) => {}
+                Opcode::OP_FX1E(x) => {
+                    self.I += self.V[x] as usize;
+                    self.pc += 2;
+                }
                 Opcode::OP_FX29(x) => {
                     // set I to the memory address of the sprite for the hex digit in VX
                     self.I = (self.V[x] * 5) as usize;
