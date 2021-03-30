@@ -210,6 +210,11 @@ pub mod chip8 {
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
+                Opcode::OP_8X16(x) => {
+                    self.V[0xF] = self.V[x] & 1;
+                    self.V[x] = self.V[x] >> 1;
+                    self.pc += 2;
+                }
                 Opcode::OP_8XY7(x, y) => {
                     let result =  self.V[y].overflowing_sub(self.V[x]);
                     self.V[0xF] = result.1 as u8;
@@ -319,7 +324,11 @@ pub mod chip8 {
                     panic!("not implemented");
                 }
                 Opcode::OP_FX55(x) => {
-                    panic!("not implemented");
+                    // dump registers
+                    for reg_index in 0..=x {
+                        self.memory[self.I + reg_index] = self.V[reg_index];
+                    }
+                    self.pc += 2;
                 }
                 Opcode::OP_FX65(x) => {
                     // load registers from memory
@@ -397,6 +406,7 @@ pub mod chip8 {
         OP_8XY3(usize, usize),
         OP_8XY4(usize, usize),
         OP_8XY5(usize, usize),
+        OP_8X16(usize),
         OP_8XY7(usize, usize),
         OP_8X1E(usize),
         OP_9XY0(usize, usize),
@@ -484,6 +494,10 @@ pub mod chip8 {
                 0x0005 => {
                     let (x, y) = decode_xy(instruction);
                     Opcode::OP_8XY5(x, y)
+                }
+                0x0006 => {
+                    let x = decode_x(instruction);
+                    Opcode::OP_8X16(x)
                 }
                 0x0007 => {
                     let (x, y) = decode_xy(instruction);
