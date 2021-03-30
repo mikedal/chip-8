@@ -216,6 +216,15 @@ pub mod chip8 {
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
+                Opcode::OP_8X1E(x) => {
+                    if self.V[x] & 0x80 == 0x80 {
+                        self.V[0xF] = 1;
+                    } else {
+                        self.V[0xF] = 0
+                    }
+                    self.V[x] = self.V[x] << 1;
+                    self.pc += 2;
+                }
                 Opcode::OP_9XY0(x, y) => {
                     if self.V[x] != self.V[y] {
                         self.pc += 4;
@@ -306,12 +315,31 @@ pub mod chip8 {
                     self.I = (self.V[x] * 5) as usize;
                     self.pc += 2;
                 }
-                Opcode::OP_FX33(x) => {}
-                Opcode::OP_FX55(x) => {}
-                Opcode::OP_FX65(x) => {}
-                Opcode::OP_FX70(x) => {}
-                Opcode::OP_FX71(x) => {}
-                Opcode::OP_FX72(x) => {}
+                Opcode::OP_FX33(x) => {
+                    panic!("not implemented");
+                }
+                Opcode::OP_FX55(x) => {
+                    panic!("not implemented");
+                }
+                Opcode::OP_FX65(x) => {
+                    // load registers from memory
+                    for reg_index in 0..=x {
+                        self.V[reg_index] = self.memory[self.I + reg_index];
+                    }
+                    self.pc += 2;
+                }
+                Opcode::OP_FX70(x) => {
+
+                    panic!("not implemented");
+                }
+                Opcode::OP_FX71(x) => {
+
+                    panic!("not implemented");
+                }
+                Opcode::OP_FX72(x) => {
+
+                    panic!("not implemented");
+                }
             }
             if self.delay_timer >0{
                 self.delay_timer -= 1;
@@ -370,6 +398,7 @@ pub mod chip8 {
         OP_8XY4(usize, usize),
         OP_8XY5(usize, usize),
         OP_8XY7(usize, usize),
+        OP_8X1E(usize),
         OP_9XY0(usize, usize),
         OP_AMMM(usize),
         OP_BMMM(usize),
@@ -459,6 +488,10 @@ pub mod chip8 {
                 0x0007 => {
                     let (x, y) = decode_xy(instruction);
                     Opcode::OP_8XY7(x, y)
+                }
+                0x000E => {
+                    let x = decode_x(instruction);
+                    Opcode::OP_8X1E(x)
                 }
                 _ => panic!("unknown opcode"),
             },
