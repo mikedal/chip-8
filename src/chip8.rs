@@ -293,6 +293,7 @@ pub mod chip8 {
                 }
                 Opcode::OP_F000 => {
                     // TODO: implement
+                    panic!("not implemented");
                 }
                 Opcode::OP_FX07(x) => {
                     self.V[x] = self.delay_timer;
@@ -301,7 +302,7 @@ pub mod chip8 {
                 Opcode::OP_FX0A(x) => {
                     // TODO: implement
                     // wait for keypress and save value to Vx
-
+                    panic!("not implemented");
                 }
                 Opcode::OP_FX15(x) => {
                     self.delay_timer = self.V[x];
