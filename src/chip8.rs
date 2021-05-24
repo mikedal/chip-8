@@ -329,6 +329,7 @@ pub mod chip8 {
                     for reg_index in 0..=x {
                         self.memory[self.I + reg_index] = self.V[reg_index];
                     }
+                    self.I += x + 1;
                     self.pc += 2;
                 }
                 Opcode::OP_FX65(x) => {
@@ -336,6 +337,7 @@ pub mod chip8 {
                     for reg_index in 0..=x {
                         self.V[reg_index] = self.memory[self.I + reg_index];
                     }
+                    self.I += x + 1;
                     self.pc += 2;
                 }
                 Opcode::OP_FX70(x) => {
