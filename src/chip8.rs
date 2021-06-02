@@ -252,25 +252,7 @@ pub mod chip8 {
                     self.pc += 2;
                 }
                 Opcode::OP_DXYN(x, y, n) => {
-                    let mut collision = false;
-                    for byte_index in 0..n as usize {
-                        let byte = self.memory[self.I + byte_index];
-                        'inner: for bit_index in 0..8 {
-                            let gfx_index = (self.V[y] as usize + byte_index) * DISPLAY_WIDTH
-                                + self.V[x] as usize
-                                + bit_index;
-                            if gfx_index >= DISPLAY_HEIGHT * DISPLAY_WIDTH {
-                                break 'inner;
-                            }
-                            let bit_value = (byte.rotate_right(7 - bit_index as u32) & 1) != 0;
-                            if bit_value & self.gfx[gfx_index] {
-                                collision = true;
-                            }
-                            self.gfx[gfx_index] = self.gfx[gfx_index] ^ bit_value;
-                        }
-                    }
-                    self.V[0xF] = collision as u8;
-                    self.draw = true;
+                    self.draw_sprite(x, y, n);
                     self.pc += 2;
                 }
                 Opcode::OP_EX9E(x) => {
@@ -369,6 +351,28 @@ pub mod chip8 {
                 self.gfx[i] = false;
             }
             self.draw = true
+        }
+
+        fn draw_sprite(&mut self, x: usize, y: usize, n: u8){
+            let mut collision = false;
+            for byte_index in 0..n as usize {
+                let byte = self.memory[self.I + byte_index];
+                'inner: for bit_index in 0..8 {
+                    let gfx_index = (self.V[y] as usize + byte_index) * DISPLAY_WIDTH
+                        + self.V[x] as usize
+                        + bit_index;
+                    if gfx_index >= DISPLAY_HEIGHT * DISPLAY_WIDTH {
+                        break 'inner;
+                    }
+                    let bit_value = (byte >> (7 - bit_index as u32) & 1) != 0;
+                    if bit_value & self.gfx[gfx_index] {
+                        collision = true;
+                    }
+                    self.gfx[gfx_index] = self.gfx[gfx_index] ^ bit_value;
+                }
+            }
+            self.V[0xF] = collision as u8;
+            self.draw = true;
         }
     }
 
@@ -597,6 +601,32 @@ pub mod chip8 {
                 }
                 _ => assert!(false, "wrong opcode parsed"),
             }
+        }
+
+        #[test]
+        fn test_draw(){
+            let mut emulator = chip8::chip8::create_chip8();
+            let x = 0;
+            let y = 0;
+            emulator.I = 0;
+            emulator.memory[emulator.I] = 0x81;
+            emulator.memory[emulator.I + 1] = 0xF1;
+            emulator.V[x] = 0;
+            emulator.V[y] = 0;
+
+            emulator.opcode = chip8::chip8::Opcode::OP_DXYN(x, y, 2);
+            emulator.execute();
+            assert_eq!(emulator.gfx[0], true);
+            assert_eq!(emulator.gfx[7], true);
+            assert_eq!(emulator.gfx[64], true);
+            assert_eq!(emulator.gfx[71], true);
+            assert_eq!(emulator.V[0xF], 0);
+            emulator.execute();
+            assert_eq!(emulator.gfx[0], false);
+            assert_eq!(emulator.gfx[7], false);
+
+            assert_eq!(emulator.gfx[71], false);
+            assert_eq!(emulator.V[0xF], 1);
         }
     }
 }
