@@ -178,7 +178,6 @@ pub mod chip8 {
                 }
                 Opcode::OP_7XKK(x, kk) => {
                     let result = self.V[x].overflowing_add(kk);
-                    self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
@@ -225,7 +224,7 @@ pub mod chip8 {
                     if self.V[x] & 0x80 == 0x80 {
                         self.V[0xF] = 1;
                     } else {
-                        self.V[0xF] = 0
+                        self.V[0xF] = 0;
                     }
                     self.V[x] = self.V[x] << 1;
                     self.pc += 2;
@@ -601,6 +600,30 @@ pub mod chip8 {
                 }
                 _ => assert!(false, "wrong opcode parsed"),
             }
+        }
+
+        #[test]
+        fn test_arithmetic(){
+            let mut emulator = chip8::chip8::create_chip8();
+            let x = 0;
+            emulator.V[x] = 0x81;
+            emulator.opcode = chip8::chip8::Opcode::OP_8X16(x);
+            emulator.execute();
+            assert_eq!(emulator.V[x], 0x40);
+            assert_eq!(emulator.V[0xF], 1);
+
+            emulator.V[x] = 0xF0;
+            emulator.execute();
+            assert_eq!(emulator.V[x], 0x78);
+            assert_eq!(emulator.V[0xF], 0);
+
+            let y = 1;
+            emulator.opcode = chip8::chip8::Opcode::OP_8XY4(x, y);
+            emulator.V[x] = 200;
+            emulator.V[y] = 60;
+            emulator.execute();
+            assert_eq!(emulator.V[x], 4);
+            assert_eq!(emulator.V[0xF], 1);
         }
 
         #[test]
