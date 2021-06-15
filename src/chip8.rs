@@ -4,7 +4,6 @@ pub mod chip8 {
     use std::io::Read;
     use std::path::Path;
     use sdl2::keyboard::Keycode;
-    use crate::chip8::chip8::Opcode::OP_1MMM;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -205,7 +204,7 @@ pub mod chip8 {
                 }
                 Opcode::OP_8XY5(x, y) => {
                     let result = self.V[x].overflowing_sub(self.V[y]) ;
-                    self.V[0xF] = result.1 as u8;
+                    self.V[0xF] = !result.1 as u8;
                     self.V[x] = result.0;
                     self.pc += 2;
                 }
@@ -310,7 +309,6 @@ pub mod chip8 {
                     for reg_index in 0..=x {
                         self.memory[self.I + reg_index] = self.V[reg_index];
                     }
-                    self.I += x + 1;
                     self.pc += 2;
                 }
                 Opcode::OP_FX65(x) => {
@@ -318,7 +316,6 @@ pub mod chip8 {
                     for reg_index in 0..=x {
                         self.V[reg_index] = self.memory[self.I + reg_index];
                     }
-                    self.I += x + 1;
                     self.pc += 2;
                 }
                 Opcode::OP_FX70(x) => {
