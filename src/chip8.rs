@@ -4,6 +4,7 @@ pub mod chip8 {
     use std::io::Read;
     use std::path::Path;
     use sdl2::keyboard::Keycode;
+    use std::time::{Duration, Instant};
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;
@@ -32,6 +33,7 @@ pub mod chip8 {
         opcode: Opcode,
         pub draw: bool,
         wait_for_input: Option<usize>,
+        tick_time: Instant,
     }
 
     impl Chip8 {
@@ -54,6 +56,7 @@ pub mod chip8 {
                 }
             }
         }
+
         pub fn key_down(&mut self, keycode: Keycode){
             let mapped_keycode = Chip8::keymap(keycode);
             match mapped_keycode {
@@ -331,8 +334,14 @@ pub mod chip8 {
                     panic!("not implemented");
                 }
             }
-            if self.delay_timer >0{
-                self.delay_timer -= 1;
+            if Instant::now() - Duration::new(0, 1_000_000_000 / 60) >= self.tick_time {
+                if self.delay_timer >0{
+                    self.delay_timer -= 1;
+                }
+                if self.sound_timer > 0 {
+                    self.sound_timer -= 1;
+                }
+                self.tick_time = Instant::now();
             }
         }
 
@@ -387,6 +396,7 @@ pub mod chip8 {
             opcode: Opcode::OP_0000,
             draw: false,
             wait_for_input: None,
+            tick_time: Instant::now(),
         };
         instance.init_font();
         instance
