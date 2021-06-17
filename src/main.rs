@@ -12,6 +12,7 @@ use std::env;
 use std::path::Path;
 
 fn main() {
+    const SCALE_FACTOR: u32 = 4;
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
     let filepath = Path::new(filename);
@@ -22,11 +23,12 @@ fn main() {
 
     let sdl_context = sdl2::init().unwrap();
     let video_subsystem = sdl_context.video().unwrap();
+    // have to implement scaling b/c of min window size?
     let window = video_subsystem
         .window(
             "chip8 emulator",
-            chip8::chip8::DISPLAY_WIDTH as u32,
-            chip8::chip8::DISPLAY_HEIGHT as u32,
+            chip8::chip8::DISPLAY_WIDTH as u32 * SCALE_FACTOR,
+            chip8::chip8::DISPLAY_HEIGHT as u32 * SCALE_FACTOR ,
         )
         .position_centered()
         .build()
@@ -64,12 +66,19 @@ fn main() {
             canvas.set_draw_color(Color::RGB(255, 255, 255));
             for i in 0..(chip8::chip8::DISPLAY_WIDTH * chip8::chip8::DISPLAY_HEIGHT) {
                 if chip8.gfx[i] {
-                    canvas
-                        .draw_point(Point::new(
-                            i as i32 % chip8::chip8::DISPLAY_WIDTH as i32,
-                            i as i32 / chip8::chip8::DISPLAY_WIDTH as i32,
-                        ))
-                        .unwrap();
+                    let x = i % chip8::chip8::DISPLAY_WIDTH;
+                    let y = i / chip8::chip8::DISPLAY_WIDTH;
+                    for subpixel_x in 0..SCALE_FACTOR{
+                        for subpixel_y in 0..SCALE_FACTOR {
+                            canvas
+                                .draw_point(Point::new(
+                                    (x as u32 * SCALE_FACTOR + subpixel_x) as i32,
+                                    (y as u32 * SCALE_FACTOR + subpixel_y) as i32,
+                                ))
+                                .unwrap();
+
+                        }
+                    }
                 }
             }
             canvas.present();
