@@ -11,8 +11,9 @@ use crate::chip8::chip8::create_chip8;
 use std::env;
 use std::path::Path;
 
+const SCALE_FACTOR: u32 = 6;
+
 fn main() {
-    const SCALE_FACTOR: u32 = 4;
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
     let filepath = Path::new(filename);
