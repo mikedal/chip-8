@@ -283,9 +283,10 @@ pub mod chip8 {
                     self.pc += 2;
                 }
                 Opcode::OP_FX0A(x) => {
-                    // TODO: implement
                     // wait for keypress and save value to Vx
-                    panic!("not implemented");
+                    self.wait_for_input = Option::Some(x);
+                    self.pc += 2;
+
                 }
                 Opcode::OP_FX15(x) => {
                     self.delay_timer = self.V[x];
@@ -348,7 +349,9 @@ pub mod chip8 {
         pub fn emulate_cycle(&mut self) {
             let raw_opcode = self.fetch();
             self.opcode = decode(raw_opcode);
-            self.execute();
+            if self.wait_for_input == None {
+                self.execute();
+            }
         }
 
         fn clear_screen(&mut self) {
