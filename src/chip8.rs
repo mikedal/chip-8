@@ -306,8 +306,13 @@ pub mod chip8 {
                     self.pc += 2;
                 }
                 Opcode::OP_FX33(x) => {
-                    panic!("not implemented");
+                    // store BCD representation of V[x] at I..I + 2
+                    self.memory[self.I] = self.V[x] / 100;
+                    self.memory[self.I + 1] = (self.V[x] / 10) % 10;
+                    self.memory[self.I + 2] = self.V[x] % 10;
+                    self.pc += 2;
                 }
+
                 Opcode::OP_FX55(x) => {
                     // dump registers
                     for reg_index in 0..=x {
