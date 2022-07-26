@@ -284,7 +284,7 @@ pub mod chip8 {
                 }
                 Opcode::OP_FX0A(x) => {
                     // wait for keypress and save value to Vx
-                    self.wait_for_input = Option::Some(x);
+                    self.wait_for_input = Some(x);
                     self.pc += 2;
 
                 }
@@ -295,7 +295,7 @@ pub mod chip8 {
                 // Opcode::OP_FX17(x) => {
                 //     self.pitch = self.V[x];
                 // }
-                Opcode::OP_FX18(x) => {}
+                Opcode::OP_FX18(_x) => {}
                 Opcode::OP_FX1E(x) => {
                     self.I += self.V[x] as usize;
                     self.pc += 2;
@@ -327,15 +327,15 @@ pub mod chip8 {
                     }
                     self.pc += 2;
                 }
-                Opcode::OP_FX70(x) => {
+                Opcode::OP_FX70(_x) => {
 
                     panic!("not implemented");
                 }
-                Opcode::OP_FX71(x) => {
+                Opcode::OP_FX71(_x) => {
 
                     panic!("not implemented");
                 }
-                Opcode::OP_FX72(x) => {
+                Opcode::OP_FX72(_x) => {
 
                     panic!("not implemented");
                 }
