@@ -12,18 +12,22 @@ use std::path::PathBuf;
 use crate::chip8::chip8::create_chip8;
 use std::path::Path;
 
-const SCALE_FACTOR: u32 = 6;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
+    // Path to the ROM file
     #[clap(value_parser)]
     rom_path: PathBuf,
+    // Pixel scale factor
+    #[clap(long, value_parser, default_value_t = 6)]
+    scale_factor: u32,
 }
 
 fn main() {
     let args = Args::parse();
     let filename = args.rom_path;
+    let scale_factor = args.scale_factor;
     let filepath = Path::new(&filename);
     assert!(filepath.is_file());
 
@@ -36,8 +40,8 @@ fn main() {
     let window = video_subsystem
         .window(
             "chip8 emulator",
-            chip8::chip8::DISPLAY_WIDTH as u32 * SCALE_FACTOR,
-            chip8::chip8::DISPLAY_HEIGHT as u32 * SCALE_FACTOR ,
+            chip8::chip8::DISPLAY_WIDTH as u32 * scale_factor,
+            chip8::chip8::DISPLAY_HEIGHT as u32 * scale_factor,
         )
         .position_centered()
         .build()
@@ -77,12 +81,12 @@ fn main() {
                 if chip8.gfx[i] {
                     let x = i % chip8::chip8::DISPLAY_WIDTH;
                     let y = i / chip8::chip8::DISPLAY_WIDTH;
-                    for subpixel_x in 0..SCALE_FACTOR{
-                        for subpixel_y in 0..SCALE_FACTOR {
+                    for subpixel_x in 0..scale_factor{
+                        for subpixel_y in 0..scale_factor {
                             canvas
                                 .draw_point(Point::new(
-                                    (x as u32 * SCALE_FACTOR + subpixel_x) as i32,
-                                    (y as u32 * SCALE_FACTOR + subpixel_y) as i32,
+                                    (x as u32 * scale_factor + subpixel_x) as i32,
+                                    (y as u32 * scale_factor + subpixel_y) as i32,
                                 ))
                                 .unwrap();
 
