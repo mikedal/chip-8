@@ -1,22 +1,30 @@
 mod chip8;
 
 extern crate sdl2;
+use clap::Parser;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
 use std::time::Duration;
+use std::path::PathBuf;
 
 use crate::chip8::chip8::create_chip8;
-use std::env;
 use std::path::Path;
 
 const SCALE_FACTOR: u32 = 6;
 
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+struct Args {
+    #[clap(value_parser)]
+    rom_path: PathBuf,
+}
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let filename = &args[1];
-    let filepath = Path::new(filename);
+    let args = Args::parse();
+    let filename = args.rom_path;
+    let filepath = Path::new(&filename);
     assert!(filepath.is_file());
 
     let mut chip8 = create_chip8();
@@ -84,7 +92,7 @@ fn main() {
             }
             canvas.present();
             chip8.draw = false;
-            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         }
 
     }
