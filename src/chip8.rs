@@ -128,99 +128,90 @@ pub mod chip8 {
         }
 
         fn execute(&mut self) {
+            // flag to be set when the next instruction is skipped
+            let mut skip_flag = false;
+            // flag to be set when an instruction sets pc
+            let mut jump_flag = false;
+
             match self.opcode {
                 Opcode::OP_0000 => {
-                    self.pc += 2; // NOP
+                    // NOOP
                 }
                 Opcode::OP_00E0 => {
                     self.clear_screen();
-                    self.pc += 2;
                 }
                 Opcode::OP_00EE => {
                     // return
                     self.sp -= 1;
                     self.pc = self.stack[self.sp] + 2;
+                    jump_flag = true;
                 }
                 Opcode::OP_1MMM(mmm) => {
                     // goto (not considered harmful}
                     self.pc = mmm;
+                    jump_flag = true;
                 }
                 Opcode::OP_2MMM(mmm) => {
                     // call subroutine
                     self.stack[self.sp] = self.pc;
                     self.sp += 1;
                     self.pc = mmm;
+                    jump_flag = true
                 }
                 Opcode::OP_3XKK(x, kk) => {
                     // skip if VX = KK
                     if self.V[x] == kk {
-                        self.pc += 4;
-                    } else {
-                        self.pc += 2;
+                        skip_flag = true;
                     }
                 }
                 Opcode::OP_4XKK(x, kk) => {
                     // skip if VX != KK
                     if self.V[x] != kk {
-                        self.pc += 4;
-                    } else {
-                        self.pc += 2;
+                        skip_flag = true;
                     }
                 }
                 Opcode::OP_5XY0(x, y) => {
                     if self.V[x] == self.V[y] {
-                        self.pc += 4;
-                    } else {
-                        self.pc += 2;
+                        skip_flag = true;
                     }
                 }
                 Opcode::OP_6XKK(x, kk) => {
                     self.V[x] = kk;
-                    self.pc += 2;
                 }
                 Opcode::OP_7XKK(x, kk) => {
                     let result = self.V[x].overflowing_add(kk);
                     self.V[x] = result.0;
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY0(x, y) => {
                     self.V[x] = self.V[y];
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY1(x, y) => {
                     self.V[x] |= self.V[y];
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY2(x, y) => {
                     self.V[x] &= self.V[y];
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY3(x, y) => {
                     self.V[x] ^= self.V[y];
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY4(x, y) => {
                     let result = self.V[x].overflowing_add(self.V[y]);
                     self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY5(x, y) => {
                     let result = self.V[x].overflowing_sub(self.V[y]) ;
                     self.V[0xF] = !result.1 as u8;
                     self.V[x] = result.0;
-                    self.pc += 2;
                 }
                 Opcode::OP_8X16(x) => {
                     self.V[0xF] = self.V[x] & 1;
                     self.V[x] = self.V[x] >> 1;
-                    self.pc += 2;
                 }
                 Opcode::OP_8XY7(x, y) => {
                     let result =  self.V[y].overflowing_sub(self.V[x]);
                     self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
-                    self.pc += 2;
                 }
                 Opcode::OP_8X1E(x) => {
                     if self.V[x] & 0x80 == 0x80 {
@@ -229,49 +220,40 @@ pub mod chip8 {
                         self.V[0xF] = 0;
                     }
                     self.V[x] = self.V[x] << 1;
-                    self.pc += 2;
                 }
                 Opcode::OP_9XY0(x, y) => {
                     if self.V[x] != self.V[y] {
-                        self.pc += 4;
-                    } else {
-                        self.pc += 2;
+                        skip_flag = true;
                     }
                 }
                 Opcode::OP_AMMM(mmm) => {
                     self.I = mmm;
-                    self.pc += 2;
                 }
                 Opcode::OP_BMMM(mmm) => {
                     self.pc = mmm + (self.V[0] as usize);
+                    jump_flag = true;
                 }
                 Opcode::OP_CXKK(x, kk) => {
                     // AND kk w/ a random value
                     let mut rng = thread_rng();
                     let rnd: u8 = rng.gen_range(0..255);
                     self.V[x] = rnd & kk;
-                    self.pc += 2;
                 }
                 Opcode::OP_DXYN(x, y, n) => {
                     self.draw_sprite(x, y, n);
-                    self.pc += 2;
                 }
                 Opcode::OP_EX9E(x) => {
                     // skip if key[Vx] is down
                     let key = self.V[x] as usize;
                     if self.keys[key] {
-                        self.pc += 4;
-                    } else {
-                        self.pc += 2;
+                        skip_flag = true;
                     }
                 }
                 Opcode::OP_EXA1(x) => {
                     // skip if key[Vx] is down
                     let key = self.V[x] as usize;
                     if !self.keys[key] {
-                        self.pc += 4;
-                    } else {
-                        self.pc += 2;
+                        skip_flag = true
                     }
                 }
                 Opcode::OP_F000 => {
@@ -280,37 +262,33 @@ pub mod chip8 {
                 }
                 Opcode::OP_FX07(x) => {
                     self.V[x] = self.delay_timer;
-                    self.pc += 2;
                 }
                 Opcode::OP_FX0A(x) => {
                     // wait for keypress and save value to Vx
                     self.wait_for_input = Some(x);
-                    self.pc += 2;
 
                 }
                 Opcode::OP_FX15(x) => {
                     self.delay_timer = self.V[x];
-                    self.pc += 2;
                 }
                 // Opcode::OP_FX17(x) => {
                 //     self.pitch = self.V[x];
                 // }
-                Opcode::OP_FX18(_x) => {}
+                Opcode::OP_FX18(_x) => {
+                    panic!("not implemented")
+                }
                 Opcode::OP_FX1E(x) => {
                     self.I += self.V[x] as usize;
-                    self.pc += 2;
                 }
                 Opcode::OP_FX29(x) => {
                     // set I to the memory address of the sprite for the hex digit in VX
                     self.I = (self.V[x] * 5) as usize;
-                    self.pc += 2;
                 }
                 Opcode::OP_FX33(x) => {
                     // store BCD representation of V[x] at I..I + 2
                     self.memory[self.I] = self.V[x] / 100;
                     self.memory[self.I + 1] = (self.V[x] / 10) % 10;
                     self.memory[self.I + 2] = self.V[x] % 10;
-                    self.pc += 2;
                 }
 
                 Opcode::OP_FX55(x) => {
@@ -318,25 +296,20 @@ pub mod chip8 {
                     for reg_index in 0..=x {
                         self.memory[self.I + reg_index] = self.V[reg_index];
                     }
-                    self.pc += 2;
                 }
                 Opcode::OP_FX65(x) => {
                     // load registers from memory
                     for reg_index in 0..=x {
                         self.V[reg_index] = self.memory[self.I + reg_index];
                     }
-                    self.pc += 2;
                 }
                 Opcode::OP_FX70(_x) => {
-
                     panic!("not implemented");
                 }
                 Opcode::OP_FX71(_x) => {
-
                     panic!("not implemented");
                 }
                 Opcode::OP_FX72(_x) => {
-
                     panic!("not implemented");
                 }
             }
@@ -348,6 +321,13 @@ pub mod chip8 {
                     self.sound_timer -= 1;
                 }
                 self.tick_time = Instant::now();
+            }
+            if !jump_flag {
+                if skip_flag {
+                    self.pc += 4;
+                } else {
+                    self.pc += 2;
+                }
             }
         }
 
