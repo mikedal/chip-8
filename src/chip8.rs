@@ -258,6 +258,7 @@ pub mod chip8 {
                 }
                 Opcode::OP_F000 => {
                     // TODO: implement
+                    // stop
                     panic!("not implemented");
                 }
                 Opcode::OP_FX07(x) => {
@@ -275,6 +276,7 @@ pub mod chip8 {
                 //     self.pitch = self.V[x];
                 // }
                 Opcode::OP_FX18(_x) => {
+                    // play tone for 20 * V[X] ms
                     panic!("not implemented")
                 }
                 Opcode::OP_FX1E(x) => {
