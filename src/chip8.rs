@@ -275,9 +275,9 @@ pub mod chip8 {
                 // Opcode::OP_FX17(x) => {
                 //     self.pitch = self.V[x];
                 // }
-                Opcode::OP_FX18(_x) => {
+                Opcode::OP_FX18(x) => {
                     // play tone for 20 * V[X] ms
-                    panic!("not implemented")
+                    self.sound_timer = 20 * self.V[x];
                 }
                 Opcode::OP_FX1E(x) => {
                     self.I += self.V[x] as usize;
