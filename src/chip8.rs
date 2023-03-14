@@ -1,9 +1,9 @@
 pub mod chip8 {
     use rand::{thread_rng, Rng};
+    use sdl2::keyboard::Keycode;
     use std::fs::File;
     use std::io::Read;
     use std::path::Path;
-    use sdl2::keyboard::Keycode;
     use std::time::{Duration, Instant};
 
     const MEM_SIZE: usize = 4096;
@@ -47,8 +47,7 @@ pub mod chip8 {
             }
         }
 
-
-        pub fn key_up(&mut self, keycode: Keycode){
+        pub fn key_up(&mut self, keycode: Keycode) {
             let mapped_keycode = Chip8::keymap(keycode);
             match mapped_keycode {
                 None => {}
@@ -58,25 +57,23 @@ pub mod chip8 {
             }
         }
 
-        pub fn key_down(&mut self, keycode: Keycode){
+        pub fn key_down(&mut self, keycode: Keycode) {
             let mapped_keycode = Chip8::keymap(keycode);
             match mapped_keycode {
                 None => {} // pressed key is not in keymap. don't do anything
-                Some(pressed_key) => {
-                    match self.wait_for_input {
-                        Some(x) => {
-                            self.V[x] = pressed_key;
-                            self.wait_for_input = None;
-                        }
-                        None => {
-                            self.keys[pressed_key as usize] = true;
-                        }
+                Some(pressed_key) => match self.wait_for_input {
+                    Some(x) => {
+                        self.V[x] = pressed_key;
+                        self.wait_for_input = None;
                     }
-                }
+                    None => {
+                        self.keys[pressed_key as usize] = true;
+                    }
+                },
             }
         }
 
-        fn keymap(keycode: Keycode) -> Option<u8>{
+        fn keymap(keycode: Keycode) -> Option<u8> {
             match keycode {
                 Keycode::X => Some(0x0),
                 Keycode::Num1 => Some(0x1),
@@ -94,7 +91,7 @@ pub mod chip8 {
                 Keycode::Z => Some(0xA),
                 Keycode::C => Some(0xB),
                 Keycode::V => Some(0xF),
-                _ => None
+                _ => None,
             }
         }
 
@@ -201,7 +198,7 @@ pub mod chip8 {
                     self.V[x] = result.0;
                 }
                 Opcode::OP_8XY5(x, y) => {
-                    let result = self.V[x].overflowing_sub(self.V[y]) ;
+                    let result = self.V[x].overflowing_sub(self.V[y]);
                     self.V[0xF] = !result.1 as u8;
                     self.V[x] = result.0;
                 }
@@ -210,7 +207,7 @@ pub mod chip8 {
                     self.V[x] = self.V[x] >> 1;
                 }
                 Opcode::OP_8XY7(x, y) => {
-                    let result =  self.V[y].overflowing_sub(self.V[x]);
+                    let result = self.V[y].overflowing_sub(self.V[x]);
                     self.V[0xF] = result.1 as u8;
                     self.V[x] = result.0;
                 }
@@ -269,7 +266,6 @@ pub mod chip8 {
                 Opcode::OP_FX0A(x) => {
                     // wait for keypress and save value to Vx
                     self.wait_for_input = Some(x);
-
                 }
                 Opcode::OP_FX15(x) => {
                     // set delay timer to VX
@@ -339,7 +335,7 @@ pub mod chip8 {
         pub fn timer_tick(&mut self) {
             // to be run every 20 ms (50 Hz)
             // public so that timing can be handled by the main loop
-            if self.delay_timer >0{
+            if self.delay_timer > 0 {
                 self.delay_timer -= 1;
             }
             if self.sound_timer > 0 {
@@ -354,7 +350,7 @@ pub mod chip8 {
             self.draw = true
         }
 
-        fn draw_sprite(&mut self, x: usize, y: usize, n: u8){
+        fn draw_sprite(&mut self, x: usize, y: usize, n: u8) {
             let mut collision = false;
             for byte_index in 0..n as usize {
                 let byte = self.memory[self.I + byte_index];
@@ -606,7 +602,7 @@ pub mod chip8 {
         }
 
         #[test]
-        fn test_arithmetic(){
+        fn test_arithmetic() {
             let mut emulator = chip8::chip8::create_chip8();
             let x = 0;
             emulator.V[x] = 0x81;
@@ -630,7 +626,7 @@ pub mod chip8 {
         }
 
         #[test]
-        fn test_draw(){
+        fn test_draw() {
             let mut emulator = chip8::chip8::create_chip8();
             let x = 0;
             let y = 0;
