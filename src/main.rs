@@ -27,19 +27,6 @@ struct Args {
     scale_factor: u32,
 }
 
-fn freq_to_period_duration(freq_hertz: u64) -> Duration {
-    Duration::from_nanos(1_000_000_000 / freq_hertz)
-}
-
-#[test]
-fn test_freq_to_period_duration() {
-    let freq = 1;
-    // 1 Hz
-    assert_eq!(freq_to_period_duration(freq), Duration::from_secs(1));
-    // 1 MHz
-    assert_eq!(freq_to_period_duration(1_000_000), Duration::from_micros(1));
-}
-
 fn main() {
     let args = Args::parse();
     let filename = args.rom_path;
@@ -150,3 +137,17 @@ fn main() {
         std::thread::sleep((cycle_start + cycle_interval) - Instant::now())
     }
 }
+
+fn freq_to_period_duration(freq_hertz: u64) -> Duration {
+    Duration::from_nanos(1_000_000_000 / freq_hertz)
+}
+
+#[test]
+fn test_freq_to_period_duration() {
+    let freq = 1;
+    // 1 Hz
+    assert_eq!(freq_to_period_duration(freq), Duration::from_secs(1));
+    // 1 MHz
+    assert_eq!(freq_to_period_duration(1_000_000), Duration::from_micros(1));
+}
+
