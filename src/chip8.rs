@@ -4,7 +4,7 @@ pub mod chip8 {
     use std::fs::File;
     use std::io::Read;
     use std::path::Path;
-    use std::time::{Duration, Instant};
+    use std::time::Duration;
 
     const MEM_SIZE: usize = 4096;
     const REGISTER_COUNT: usize = 16;

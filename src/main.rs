@@ -1,20 +1,20 @@
+extern crate sdl2;
+
 mod audio;
 mod chip8;
 
-extern crate sdl2;
+use audio::SquareWave;
+
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
 
 use clap::Parser;
+
+use sdl2::audio::AudioSpecDesired;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
-use std::path::PathBuf;
-use std::time::{Duration, Instant};
-
-use crate::chip8::chip8::create_chip8;
-use audio::SquareWave;
-use sdl2::audio::AudioSpecDesired;
-use std::path::Path;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -47,7 +47,7 @@ fn main() {
     let filepath = Path::new(&filename);
     assert!(filepath.is_file());
 
-    let mut chip8 = create_chip8();
+    let mut chip8 = chip8::chip8::create_chip8();
     chip8.load_rom(filepath);
 
     let sdl_context = sdl2::init().unwrap();
