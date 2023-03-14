@@ -14,6 +14,8 @@ pub mod chip8 {
     const KEY_COUNT: usize = 16;
     const FONT_SIZE: usize = 80;
     const PROGRAM_START_ADDRESS: usize = 0x0200;
+    pub const CYCLE_FREQ: u64 = 840; // kind of a guess. game speed depends on this
+    pub const TICK_INTERVAL: Duration = Duration::from_millis(20);
 
     #[allow(non_snake_case)]
     pub struct Chip8 {
@@ -26,14 +28,13 @@ pub mod chip8 {
         // monochrome, so use bool
         pub gfx: [bool; DISPLAY_HEIGHT * DISPLAY_WIDTH],
         delay_timer: u8,
-        sound_timer: u8,
+        pub sound_timer: u8,
         stack: [usize; STACK_SIZE],
         sp: usize,
         keys: [bool; KEY_COUNT],
         opcode: Opcode,
         pub draw: bool,
         wait_for_input: Option<usize>,
-        tick_time: Instant,
     }
 
     impl Chip8 {
@@ -262,6 +263,7 @@ pub mod chip8 {
                     panic!("not implemented");
                 }
                 Opcode::OP_FX07(x) => {
+                    // set VX to delay timer
                     self.V[x] = self.delay_timer;
                 }
                 Opcode::OP_FX0A(x) => {
@@ -270,6 +272,7 @@ pub mod chip8 {
 
                 }
                 Opcode::OP_FX15(x) => {
+                    // set delay timer to VX
                     self.delay_timer = self.V[x];
                 }
                 // Opcode::OP_FX17(x) => {
@@ -277,7 +280,7 @@ pub mod chip8 {
                 // }
                 Opcode::OP_FX18(x) => {
                     // play tone for 20 * V[X] ms
-                    self.sound_timer = 20 * self.V[x];
+                    self.sound_timer = self.V[x];
                 }
                 Opcode::OP_FX1E(x) => {
                     self.I += self.V[x] as usize;
@@ -315,15 +318,7 @@ pub mod chip8 {
                     panic!("not implemented");
                 }
             }
-            if Instant::now() - Duration::new(0, 1_000_000_000 / 60) >= self.tick_time {
-                if self.delay_timer >0{
-                    self.delay_timer -= 1;
-                }
-                if self.sound_timer > 0 {
-                    self.sound_timer -= 1;
-                }
-                self.tick_time = Instant::now();
-            }
+
             if !jump_flag {
                 if skip_flag {
                     self.pc += 4;
@@ -338,6 +333,17 @@ pub mod chip8 {
             self.opcode = decode(raw_opcode);
             if self.wait_for_input == None {
                 self.execute();
+            }
+        }
+
+        pub fn timer_tick(&mut self) {
+            // to be run every 20 ms (50 Hz)
+            // public so that timing can be handled by the main loop
+            if self.delay_timer >0{
+                self.delay_timer -= 1;
+            }
+            if self.sound_timer > 0 {
+                self.sound_timer -= 1;
             }
         }
 
@@ -386,11 +392,11 @@ pub mod chip8 {
             opcode: Opcode::OP_0000,
             draw: false,
             wait_for_input: None,
-            tick_time: Instant::now(),
         };
         instance.init_font();
         instance
     }
+
     #[allow(non_camel_case_types)]
     enum Opcode {
         OP_0000,
