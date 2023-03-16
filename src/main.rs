@@ -15,6 +15,8 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Point;
+use sdl2::render::WindowCanvas;
+use crate::chip8::chip8::Chip8;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -111,31 +113,35 @@ fn main() {
             }
         }
         if chip8.draw {
-            canvas.set_draw_color(Color::RGB(0, 0, 0));
-            canvas.clear();
-            canvas.set_draw_color(Color::RGB(255, 255, 255));
-            for i in 0..(chip8::chip8::DISPLAY_WIDTH * chip8::chip8::DISPLAY_HEIGHT) {
-                if chip8.gfx[i] {
-                    let x = i % chip8::chip8::DISPLAY_WIDTH;
-                    let y = i / chip8::chip8::DISPLAY_WIDTH;
-                    for subpixel_x in 0..scale_factor {
-                        for subpixel_y in 0..scale_factor {
-                            canvas
-                                .draw_point(Point::new(
-                                    (x as u32 * scale_factor + subpixel_x) as i32,
-                                    (y as u32 * scale_factor + subpixel_y) as i32,
-                                ))
-                                .unwrap();
-                        }
-                    }
-                }
-            }
-            canvas.present();
-            chip8.draw = false;
+            draw_canvas(&mut canvas, &mut chip8, scale_factor);
         }
 
         std::thread::sleep((cycle_start + cycle_interval) - Instant::now())
     }
+}
+
+fn draw_canvas(canvas: &mut WindowCanvas, chip8: &mut Chip8, scale_factor: u32) {
+    canvas.set_draw_color(Color::RGB(0, 0, 0));
+    canvas.clear();
+    canvas.set_draw_color(Color::RGB(255, 255, 255));
+    for i in 0..(chip8::chip8::DISPLAY_WIDTH * chip8::chip8::DISPLAY_HEIGHT) {
+        if chip8.gfx[i] {
+            let x = i % chip8::chip8::DISPLAY_WIDTH;
+            let y = i / chip8::chip8::DISPLAY_WIDTH;
+            for subpixel_x in 0..scale_factor {
+                for subpixel_y in 0..scale_factor {
+                    canvas
+                        .draw_point(Point::new(
+                            (x as u32 * scale_factor + subpixel_x) as i32,
+                            (y as u32 * scale_factor + subpixel_y) as i32,
+                        ))
+                        .unwrap();
+                }
+            }
+        }
+    }
+    canvas.present();
+    chip8.draw = false;
 }
 
 fn freq_to_period_duration(freq_hertz: u64) -> Duration {
